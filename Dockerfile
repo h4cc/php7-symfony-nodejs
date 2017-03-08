@@ -11,6 +11,7 @@ RUN apt-get update && apt-get install -y \
       libpq-dev \
       g++ \
       git \
+      curl \
       && docker-php-ext-install -j$(nproc) iconv mcrypt \
       && docker-php-ext-configure gd --with-freetype-dir=/usr/include/ --with-jpeg-dir=/usr/include/ \
       && docker-php-ext-install -j$(nproc) gd \
@@ -26,11 +27,17 @@ RUN apt-get update && apt-get install -y \
       && pecl install zip \
       && docker-php-ext-enable zip
 
+# Composer
+WORKDIR "/tmp"
+RUN php -r "readfile('https://getcomposer.org/installer');" > composer-setup.php
+RUN php composer-setup.php --install-dir=/bin --filename=composer
+RUN php -r "unlink('composer-setup.php');"
+
 # Install Nodejs
-RUN apt-get install -y curl \
-      && curl -sL https://deb.nodesource.com/setup_6.x | bash \
+RUN curl -sL https://deb.nodesource.com/setup_6.x | bash \
       && apt-get install -y nodejs
 
+# Runtime config
 WORKDIR "/var/www"
 RUN usermod -u 1000 www-data
 
